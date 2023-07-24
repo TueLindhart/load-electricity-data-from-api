@@ -42,7 +42,7 @@ def main():
         else:
             # Retry once again if it failed the first time
             # Sleep for 60 seconds to avoid 1 minute rescriction on data token calls
-            time.sleep(secs=60)
+            time.sleep(60)
             result = load_data_from_api_and_upload_to_drive(refresh_token)
 
 
