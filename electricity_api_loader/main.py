@@ -17,7 +17,9 @@ def load_data_from_api_and_upload_to_drive(refresh_token: str):
         result = load_data(refresh_token, date_from, date_to)
 
         if result["status"] == "success":
-            upload_file_to_drive(file_path=result["file_path"])
+            file_paths = result["file_paths"]
+            for file_path in file_paths:
+                upload_file_to_drive(file_path=file_path)
         else:
             return {"status": "error"}
 

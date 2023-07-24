@@ -10,6 +10,8 @@ Install necessary packages in a virtual environment
 python -m venv venv
 source venv/bin/activate
 pip install --upgrade pip && pip install -r requirements.txt
+export GOOGLE_APPLICATION_CREDENTIALS="..."
+export TARGET_FOLDER_ID="..."
 ```
 
 ## Usage

@@ -22,7 +22,7 @@ def get_data_access_token(refresh_token: str):
     if response.status_code == 200:
         return response.json()["result"]
     else:
-        print(f"Error getting data access token: {response.status_code}")
+        print(f"Error getting data access token with error code {response.status_code} and reason {response.reason}")
         return None
 
 
@@ -33,7 +33,7 @@ def get_metering_points(access_token: str):
     if response.status_code == 200:
         return response.json()["result"]
     else:
-        print(f"Error getting metering points: {response.status_code}")
+        print(f"Error getting metering points with error code {response.status_code} and reason {response.reason}")
         return None
 
 
@@ -80,26 +80,32 @@ def load_data(refresh_token: str, date_from: str | datetime | None = None, date_
     # Use the functions
     print("Getting access token...")
     access_token = get_data_access_token(refresh_token)
-    if access_token:
-        print("Getting metering points...")
-        metering_points = get_metering_points(access_token)
-        if metering_points:
-            print("Getting meter data...")
-            metering_point_ids = [metering_point["meteringPointId"] for metering_point in metering_points]
-            df_meter_data = get_meter_data(access_token, metering_point_ids, date_from, date_to, "Hour")
-            if df_meter_data is not None:
-                for metering_point_id in metering_point_ids:
-                    df_metering_point_id: pd.DataFrame = df_meter_data.loc[
-                        df_meter_data["metering_point_id"] == int(metering_point_id)
-                    ]
-                    file_path = f"data/{date_from}-{date_to}-{metering_point_id}.csv"
-                    df_metering_point_id.to_csv(file_path, index=False)
+    if access_token is None:
+        return {"status": "error", "file_path": None, "error": "Error getting access token"}
 
-                    print(f"Saved data to {file_path}")
-                    return {"status": "success", "file_path": file_path}
+    print("Getting metering points...")
+    metering_points = get_metering_points(access_token)
+    if metering_points is None:
+        return {"status": "error", "file_path": None, "error": "Error getting metering points"}
 
-    print("Error getting data")
-    return {"status": "error", "file_path": None}
+    print("Getting meter data...")
+    metering_point_ids = [metering_point["meteringPointId"] for metering_point in metering_points]
+    df_meter_data = get_meter_data(access_token, metering_point_ids, date_from, date_to, "Hour")
+    if df_meter_data is None:
+        return {"status": "error", "file_path": None, "error": "Error getting meter data"}
+
+    file_paths = []
+    for metering_point_id in metering_point_ids:
+        df_metering_point_id: pd.DataFrame = df_meter_data.loc[
+            df_meter_data["metering_point_id"] == int(metering_point_id)
+        ]
+        file_path = f"data/{date_from}-{date_to}-{metering_point_id}.csv"
+        df_metering_point_id.to_csv(file_path, index=False)
+        file_paths.append(file_path)
+
+        print(f"Saved data to {file_path}")
+
+    return {"status": "success", "file_paths": file_paths}
 
 
 if __name__ == "__main__":
