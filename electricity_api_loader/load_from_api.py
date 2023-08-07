@@ -46,7 +46,7 @@ def get_meter_data(
     aggregation: str,
 ):
     headers["Authorization"] = f"Bearer {access_token}"
-    data = {"meteringPoints": {"meteringPoint": metering_point_ids * 2}}
+    data = {"meteringPoints": {"meteringPoint": metering_point_ids}}
     response = requests.post(
         # f"{base_url}/api/meterdata/gettimeseries/{date_from}/{date_to}/{aggregation}",  # noqa: E501
         f"{base_url}/api/meterdata/timeseries/export/{date_from}/{date_to}/{aggregation}",  # noqa: E501
@@ -64,7 +64,12 @@ def get_meter_data(
         return None
 
 
-def load_data(refresh_token: str, date_from: str | datetime | None = None, date_to: str | datetime | None = None):
+def load_data(
+    refresh_token: str,
+    data_id: str,
+    date_from: str | datetime | None = None,
+    date_to: str | datetime | None = None,
+):
     if date_to is None:
         date_to = datetime.now()
 
@@ -94,6 +99,9 @@ def load_data(refresh_token: str, date_from: str | datetime | None = None, date_
     if df_meter_data is None:
         return {"status": "error", "file_path": None, "error": "Error getting meter data"}
 
+    # Add id
+    df_meter_data["id"] = data_id
+
     file_paths = []
     for metering_point_id in metering_point_ids:
         df_metering_point_id: pd.DataFrame = df_meter_data.loc[
@@ -111,4 +119,9 @@ def load_data(refresh_token: str, date_from: str | datetime | None = None, date_
 if __name__ == "__main__":
     with open("refresh_token.txt", "r") as f:
         refresh_token = f.read()
-    load_data(refresh_token=refresh_token, date_from="2023-07-23", date_to="2023-07-24")
+    load_data(
+        refresh_token=refresh_token,
+        data_id=refresh_token[-10:],
+        date_from="2023-07-23",
+        date_to="2023-07-24",
+    )
