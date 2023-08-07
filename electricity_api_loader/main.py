@@ -39,7 +39,8 @@ def main():
     new_token_ids = check_new_tokens(prior_meta_data_df=prior_metadata_df, current_meta_data_df=current_metadata_df)
 
     if not new_token_ids:
-        return "No new tokens"
+        print("No new tokens")
+        return
 
     # Properly better to properly rename columns than using indices
     refresh_tokens = current_metadata_df.loc[current_metadata_df["id"].isin(new_token_ids)].iloc[:, 3].tolist()
@@ -62,10 +63,14 @@ def main():
         if result["status"] != "success":
             failed_runs.append(id_)
 
+    if not any(failed_runs):
+        print("Done adding new data")
+        return
+
     # If any failed runs then send email alert
-    if any(failed_runs):
-        content = f"Following data ID's failed to collect data: {failed_runs}"
-        send_email(content=content)
+    content = f"Following data ID's failed to collect data: {failed_runs}"
+    send_email(content=content)
+    print("Error in collecting data. Mail send.")
 
 
 if __name__ == "__main__":

@@ -30,3 +30,7 @@ def send_email(content: str):
         server.starttls()  # Upgrade the connection to encrypted TLS
         server.login(from_email, from_password)  # Login to your email account
         server.send_message(msg)  # Send the email message
+
+
+if __name__ == "__main__":
+    send_email(content="Aprilsnar! Alt godt")
