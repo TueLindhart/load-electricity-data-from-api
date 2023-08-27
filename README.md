@@ -20,9 +20,6 @@ source .venv/bin/activate
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip && pip install -r requirements.txt
-
-export GOOGLE_APPLICATION_CREDENTIALS="..."
-export TARGET_FOLDER_ID="..."
 ```
 
 ## Usage
@@ -30,4 +27,31 @@ export TARGET_FOLDER_ID="..."
 ```bash
 python electricity_api_loader/main.py
 ```
+
+
+
+# First define necessary environment variables 
+
+Create a .env with the following variables. 
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS='...'
+TARGET_FOLDER_ID='...'
+SHEET_ID='...'
+FROM_EMAIL='...'
+FROM_PASSWORD='...'
+TO_EMAIL='...'
+```
+
+Create a output.log file
+```bash
+touch output.log
+```
+
+Create a cronjob to run every 10 minutes by `crontab -e` and insert
+
+```bash
+*/10 * * * * <path-to-repo>/load-electricity-data-from-api/init.sh >> <path-to-repo>/load-electricity-data-from-api/output.log 2>&1
+```
+
 
