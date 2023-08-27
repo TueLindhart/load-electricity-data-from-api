@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "electricity data loader repo"
+version = "0.1.0"
+description = "Repo for continuously downloading electricity data when token is provided in google sheets"
+authors = ["Tue Thomsen <tuethomsen28@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+click = "8.1.6"
+black = "23.7.0"
+flake8 = "6.0.0"
+pandas = "2.0.3"
+PyDrive = "1.3.1"
+google-api-core = "2.11.1"
+google-api-python-client = "2.94.0"
+google-auth = "2.22.0"
+google-auth-httplib2 = "0.1.0"
+google-auth-oauthlib = "1.0.0"
+googleapis-common-protos = "1.59.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
