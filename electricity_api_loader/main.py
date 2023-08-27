@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 
 from google_drive_utils import load_google_forms_as_df, upload_file_to_drive
 from load_from_api import load_data
+from send_error_mail import send_email
 from utils import check_new_tokens, load_prior_metadata
-
-from electricity_api_loader.send_error_mail import send_email
 
 
 def load_data_from_api_and_upload_to_drive(refresh_token: str, data_id: str):
@@ -15,10 +14,21 @@ def load_data_from_api_and_upload_to_drive(refresh_token: str, data_id: str):
 
     # Load data for the last 720 days over 2 iterations as maximum 720 days are allowed per request
     # Not adding files together to single file as it requires greater restructuring of code.
+    access_token = None
+    metering_point_ids = []
+    get_master_and_charge_data = True
     for i in [0, 720]:
         date_to = date_to - timedelta(days=i)
         date_from = date_from - timedelta(days=i)
-        result = load_data(refresh_token, data_id, date_from, date_to)
+        result = load_data(
+            data_id=data_id,
+            refresh_token=refresh_token,
+            access_token=access_token,
+            metering_point_ids=metering_point_ids,
+            date_from=date_from,
+            date_to=date_to,
+            get_master_and_charge_data=get_master_and_charge_data,
+        )
 
         if result["status"] == "success":
             file_paths = result["file_paths"]
@@ -26,6 +36,10 @@ def load_data_from_api_and_upload_to_drive(refresh_token: str, data_id: str):
                 upload_file_to_drive(file_path=file_path)
         else:
             return {"status": "error"}
+
+        get_master_and_charge_data = False
+        access_token = result["access_token"]
+        metering_point_ids = result["metering_point_ids"]
 
     return {"status": "success"}
 
@@ -41,6 +55,9 @@ def main():
     if not new_token_ids:
         print("No new tokens")
         return
+
+    # Save new current_metadata_df to meta_data folder
+    current_metadata_df.to_csv("data/meta_data/meta_data.csv", index=False)
 
     # Properly better to properly rename columns than using indices
     refresh_tokens = current_metadata_df.loc[current_metadata_df["id"].isin(new_token_ids)].iloc[:, 3].tolist()
@@ -65,6 +82,8 @@ def main():
 
     if not any(failed_runs):
         print("Done adding new data")
+        content = "You have received new electricity data!"
+        send_email(content=content)
         return
 
     # If any failed runs then send email alert

@@ -1,8 +1,13 @@
+import os
+
 import pandas as pd
 
 
 def load_prior_metadata():
-    return pd.read_csv("data/meta_data/meta_data.csv")
+    if os.path.exists("data/meta_data/meta_data.csv"):
+        return pd.read_csv("data/meta_data/meta_data.csv")
+    else:
+        return pd.DataFrame()
 
 
 def check_new_tokens(
@@ -10,7 +15,11 @@ def check_new_tokens(
     current_meta_data_df: pd.DataFrame,
 ):
     # Use sets to see if any new tokens
-    prior_ids = set(prior_meta_data_df["id"].tolist())
+    if not prior_meta_data_df.empty:
+        prior_ids = set(prior_meta_data_df["id"].tolist())
+    else:
+        prior_ids = set()
+
     current_ids = set(current_meta_data_df["id"].tolist())
 
     return list(current_ids - prior_ids)
