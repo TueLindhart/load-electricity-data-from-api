@@ -28,9 +28,7 @@ pip install --upgrade pip && pip install -r requirements.txt
 python electricity_api_loader/main.py
 ```
 
-
-
-# First define necessary environment variables 
+# Setup crontab
 
 Create a .env with the following variables. 
 
