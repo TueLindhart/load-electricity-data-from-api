@@ -223,14 +223,3 @@ def load_data(
         metering_point_ids=metering_point_ids,
         access_token=access_token,
     )
-
-
-if __name__ == "__main__":
-    with open("refresh_token.txt", "r") as f:
-        refresh_token = f.read()
-    load_data(
-        refresh_token=refresh_token,
-        data_id=refresh_token[-10:],
-        date_from="2023-07-23",
-        date_to="2023-07-24",
-    )

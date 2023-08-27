@@ -82,13 +82,18 @@ def main():
 
     if not any(failed_runs):
         print("Done adding new data")
+        subject = "New electricity data added"
         content = "You have received new electricity data!"
-        send_email(content=content)
+        send_email(
+            subject=subject,
+            content=content,
+        )
         return
 
     # If any failed runs then send email alert
     content = f"Following data ID's failed to collect data: {failed_runs}"
-    send_email(content=content)
+    subject = "Error in fetching data"
+    send_email(subject=subject, content=content)
     print("Error in collecting data. Mail send.")
 
 

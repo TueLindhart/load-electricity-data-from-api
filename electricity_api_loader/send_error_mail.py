@@ -3,7 +3,7 @@ import smtplib
 from email.message import EmailMessage
 
 
-def send_email(content: str):
+def send_email(subject: str, content: str):
     """
     Sends an email using the provided subject and content.
 
@@ -21,7 +21,7 @@ def send_email(content: str):
     # Create an EmailMessage object
     msg = EmailMessage()
     msg.set_content(content)
-    msg["Subject"] = "Electricity data load error"
+    msg["Subject"] = subject
     msg["From"] = from_email
     msg["To"] = os.getenv("TO_EMAIL")
 
@@ -33,4 +33,4 @@ def send_email(content: str):
 
 
 if __name__ == "__main__":
-    send_email(content="Aprilsnar! Alt godt")
+    send_email(content="Aprilsnar! Alt godt", subject="Alarm!")
