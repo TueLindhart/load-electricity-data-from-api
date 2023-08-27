@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 cd /Users/tuethomsen/projects/load-electricity-data-from-api/
 source .venv/bin/activate
 export $(grep -v '^#' .env | xargs)
