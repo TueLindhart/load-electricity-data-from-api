@@ -34,3 +34,7 @@ def map_text_to_df(data_text: str):
     decoded_data = decode_data_text(data_text=data_text)
     data_file_like = io.StringIO(decoded_data)
     return pd.read_csv(data_file_like, delimiter=";", encoding="utf-8")
+
+
+def process_commaseparated_columns(col: pd.Series):
+    return col.str.replace(",", ".").astype(float)

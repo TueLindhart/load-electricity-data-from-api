@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 
 # import click
-from utils import map_text_to_df
+from utils import map_text_to_df, process_commaseparated_columns
 
 # Define the base URL for the API
 BASE_URL = "https://api.eloverblik.dk/customerapi"
@@ -94,6 +94,9 @@ def get_metering_points_master_and_charge_data(access_token: str, metering_point
     if response_master.status_code == 200:
         df_master = map_text_to_df(data_text=response_master.text)
         df_master = df_master[MASTER_COLUMNS_TO_SAVE]
+        df_master["Målercifre"] = process_commaseparated_columns(df_master["Målercifre"])
+        df_master["Faktor"] = process_commaseparated_columns(df_master["Faktor"])
+
     else:
         print(
             f"Error getting meta data with error code {response_master.status_code} and reason {response_master.reason}"
@@ -108,6 +111,7 @@ def get_metering_points_master_and_charge_data(access_token: str, metering_point
     )
     if response_charge.status_code == 200:
         df_charge = map_text_to_df(data_text=response_charge.text)
+        df_charge["Pris"] = process_commaseparated_columns(df_charge["Pris"])
     else:
         print(
             f"Error getting charge data with error code {response_charge.status_code} and reason {response_charge.reason}"
@@ -137,6 +141,7 @@ def get_meter_data(
     if response.status_code == 200:
         df = map_text_to_df(response.text)
         df.columns = ["metering_point_id", "from_date", "to_date", "consumption", "unit", "quality", "type"]
+        df["consumption"] = process_commaseparated_columns(df["consumption"])
         return df
     else:
         print(f"Error getting meter data with error code {response.status_code} and reason {response.reason}")
