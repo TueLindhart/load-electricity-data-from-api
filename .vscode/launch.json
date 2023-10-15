@@ -17,7 +17,7 @@
             "name": "Electricity data loader",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/electricity_api_loader/main.py",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             

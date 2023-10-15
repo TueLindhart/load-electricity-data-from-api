@@ -1,3 +1,4 @@
+import io
 import os
 
 import pandas as pd
@@ -23,3 +24,13 @@ def check_new_tokens(
     current_ids = set(current_meta_data_df["id"].tolist())
 
     return list(current_ids - prior_ids)
+
+
+def decode_data_text(data_text: str):
+    return data_text.encode("latin1").decode("utf-8")
+
+
+def map_text_to_df(data_text: str):
+    decoded_data = decode_data_text(data_text=data_text)
+    data_file_like = io.StringIO(decoded_data)
+    return pd.read_csv(data_file_like, delimiter=";", encoding="utf-8")

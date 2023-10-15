@@ -1,12 +1,12 @@
-import io
 import json
 from datetime import datetime, timedelta
 from typing import List, TypedDict
 
 import pandas as pd
+import requests
 
 # import click
-import requests
+from utils import map_text_to_df
 
 # Define the base URL for the API
 BASE_URL = "https://api.eloverblik.dk/customerapi"
@@ -21,6 +21,42 @@ class LoadDataResponse(TypedDict):
     access_token: str | None
     metering_point_ids: List[str]
     error: str
+
+
+MASTER_COLUMNS_TO_SAVE = [  # Makes sure we don't save any personal information
+    "Målepunkts Id",
+    "Målepunkts Id hovedmåler",
+    "Alias",
+    "Målepunktstype",
+    "Netområde",
+    "MeteringPoint.NetSettlementGroup",
+    "Tilslutningsstatus",
+    "Nettoafregningsgruppe",
+    "Effektgrænse",
+    "Strømstyke grænse",
+    "Målepunktsart",
+    "Produktionskrav",
+    "Kapasitet",
+    "Tilslutnings type",
+    "Frakoplingstatus",
+    "Produkt",
+    "Enhed",
+    "Post nr",  # ?
+    "By",  # ?
+    "Ellevrandør",
+    "Start dato",
+    "Start dato.1",
+    "Aflæsningsfrekvens",
+    "Anslået årligt forbrug",
+    "Målernummer",
+    "Målercifre",
+    "Faktor",
+    "Målerenhed",
+    "Måler type",
+    "Reduceret elafgift",
+    "Dato",
+    "Net virksommhed",
+]
 
 
 # Get a data access token
@@ -56,8 +92,8 @@ def get_metering_points_master_and_charge_data(access_token: str, metering_point
         data=json.dumps(data),
     )
     if response_master.status_code == 200:
-        csv_file = io.StringIO(response_master.text)
-        df_master = pd.read_csv(csv_file, sep=";", encoding="utf-8")  # Kan ikke få encoding til at virke
+        df_master = map_text_to_df(data_text=response_master.text)
+        df_master = df_master[MASTER_COLUMNS_TO_SAVE]
     else:
         print(
             f"Error getting meta data with error code {response_master.status_code} and reason {response_master.reason}"
@@ -71,8 +107,7 @@ def get_metering_points_master_and_charge_data(access_token: str, metering_point
         data=json.dumps(data),
     )
     if response_charge.status_code == 200:
-        csv_file = io.StringIO(response_charge.text)
-        df_charge = pd.read_csv(csv_file, sep=";", encoding="utf-8")  # Kan ikke få encoding til at virke
+        df_charge = map_text_to_df(data_text=response_charge.text)
     else:
         print(
             f"Error getting charge data with error code {response_charge.status_code} and reason {response_charge.reason}"
@@ -100,8 +135,7 @@ def get_meter_data(
     )
 
     if response.status_code == 200:
-        csv_file = io.StringIO(response.text)
-        df = pd.read_csv(csv_file, sep=";", encoding="utf-8")  # Kan ikke få encoding til at virke
+        df = map_text_to_df(response.text)
         df.columns = ["metering_point_id", "from_date", "to_date", "consumption", "unit", "quality", "type"]
         return df
     else:
@@ -202,16 +236,19 @@ def load_data(
                 access_token=None,
             )
 
+        df_master["id"] = data_id
+        df_charge["id"] = data_id
+
         for metering_point_id in metering_point_ids:
             # save master data for metering point id
             master_file_path = f"data/master_data/{metering_point_id}-master_data.csv"
-            df_master_metering_point_id = df_master.loc[df_master.iloc[:, 0] == metering_point_id]
+            df_master_metering_point_id = df_master.loc[df_master.iloc[:, 0].astype(str) == metering_point_id]
             df_master_metering_point_id.to_csv(master_file_path, index=False)
             file_paths.append(master_file_path)
             print(f"Saved master data for metering ID = {metering_point_id} to {master_file_path}")
 
             charge_file_path = f"data/charge_data/{metering_point_id}-charge_data.csv"
-            df_charge_metering_point_id = df_charge.loc[df_charge.iloc[:, 0] == metering_point_id]
+            df_charge_metering_point_id = df_charge.loc[df_charge.iloc[:, 0].astype(str) == metering_point_id]
             df_charge_metering_point_id.to_csv(charge_file_path, index=False)
             file_paths.append(charge_file_path)
             print(f"Saved chage data for metering ID = {metering_point_id} to {charge_file_path}")
