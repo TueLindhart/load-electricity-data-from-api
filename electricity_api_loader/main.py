@@ -45,56 +45,64 @@ def load_data_from_api_and_upload_to_drive(refresh_token: str, data_id: str):
 
 
 def main():
-    # Code here to check if there is any new tokens
-    prior_metadata_df = load_prior_metadata()
-    current_metadata_df = load_google_forms_as_df()
+    try:
+        # Code here to check if there is any new tokens
+        prior_metadata_df = load_prior_metadata()
+        current_metadata_df = load_google_forms_as_df()
 
-    # Code here to get new tokens
-    new_token_ids = check_new_tokens(prior_meta_data_df=prior_metadata_df, current_meta_data_df=current_metadata_df)
+        # Code here to get new tokens
+        new_token_ids = check_new_tokens(prior_meta_data_df=prior_metadata_df, current_meta_data_df=current_metadata_df)
 
-    if not new_token_ids:
-        print("No new tokens")
-        return
+        if not new_token_ids:
+            print("No new tokens")
+            return
 
-    # Save new current_metadata_df to meta_data folder
-    current_metadata_df.to_csv("data/meta_data/meta_data.csv", index=False)
+        # Save new current_metadata_df to meta_data folder
+        current_metadata_df.to_csv("data/meta_data/meta_data.csv", index=False)
 
-    # Properly better to properly rename columns than using indices
-    refresh_tokens = current_metadata_df.loc[current_metadata_df["id"].isin(new_token_ids)].iloc[:, 3].tolist()
-    refresh_tokens = current_metadata_df.set_index("id").loc[new_token_ids].iloc[:, 3].tolist()
+        # Properly better to properly rename columns than using indices
+        refresh_tokens = current_metadata_df.loc[current_metadata_df["id"].isin(new_token_ids)].iloc[:, 3].tolist()
+        refresh_tokens = current_metadata_df.set_index("id").loc[new_token_ids].iloc[:, 3].tolist()
 
-    # Load data and collect any failed runs
-    failed_runs = []
-    for id_, refresh_token in zip(new_token_ids, refresh_tokens):
-        # Load data
-        result = load_data_from_api_and_upload_to_drive(refresh_token, data_id=id_)
+        # Load data and collect any failed runs
+        failed_runs = []
+        for id_, refresh_token in zip(new_token_ids, refresh_tokens):
+            # Load data
+            result = load_data_from_api_and_upload_to_drive(refresh_token, data_id=id_)
 
-        if result["status"] == "success":
-            print(f"ID={id_} Successfully loaded data from API and uploaded to Google Drive")
-            continue
+            if result["status"] == "success":
+                print(f"ID={id_} Successfully loaded data from API and uploaded to Google Drive")
+                continue
 
-        # Retry once again if it failed the first time
-        # Sleep for 60 seconds to avoid 1 minute rescriction on data token calls
-        time.sleep(60)
-        result = load_data_from_api_and_upload_to_drive(refresh_token, data_id=id_)
-        if result["status"] != "success":
-            failed_runs.append(id_)
+            # Retry once again if it failed the first time
+            # Sleep for 60 seconds to avoid 1 minute rescriction on data token calls
+            time.sleep(60)
+            result = load_data_from_api_and_upload_to_drive(refresh_token, data_id=id_)
+            if result["status"] != "success":
+                failed_runs.append(id_)
 
-    if not any(failed_runs):
-        print("Done adding new data")
-        subject = "New electricity data added"
-        content = "You have received new electricity data!"
-        send_email(
-            subject=subject,
-            content=content,
-        )
-        return
+        if not any(failed_runs):
+            print("Done adding new data")
+            subject = "New electricity data added"
+            content = "You have received new electricity data!"
+            send_email(
+                subject=subject,
+                content=content,
+            )
+            return
 
-    # If any failed runs then send email alert
-    content = f"Following data ID's failed to collect data: {failed_runs}"
-    subject = "Error in fetching data"
-    send_email(subject=subject, content=content)
-    print("Error in collecting data. Mail send.")
+        # If any failed runs then send email alert
+        content = f"Following data ID's failed to collect data: {failed_runs}"
+        subject = "Error in fetching data"
+        send_email(subject=subject, content=content)
+        print("Error in collecting data. Mail send.")
+
+    except Exception as e:
+        # If any failed runs then send email alert
+        content = f"Failed run with error: \n {e}"
+        subject = "Error in fetching data"
+        send_email(subject=subject, content=content)
+        print("Error in collecting data. Mail send.")
 
 
 if __name__ == "__main__":

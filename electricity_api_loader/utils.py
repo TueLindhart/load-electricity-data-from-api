@@ -37,4 +37,6 @@ def map_text_to_df(data_text: str):
 
 
 def process_commaseparated_columns(col: pd.Series):
-    return col.str.replace(",", ".").astype(float)
+    if isinstance(col, str):
+        return col.str.replace(",", ".").astype(float)
+    return col
